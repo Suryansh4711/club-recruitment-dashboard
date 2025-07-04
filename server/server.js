@@ -19,7 +19,10 @@ app.use((req, res, next) => {
 });
 
 const applicationRoutes = require('./routes/applicationRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+
 app.use('/api', applicationRoutes);
+app.use('/api/admin', adminRoutes);
 
 
 // MongoDB Connection (optional for testing)

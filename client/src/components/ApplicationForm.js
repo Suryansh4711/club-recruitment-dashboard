@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // shadcn/ui components
 import { Button } from './ui/button';
@@ -9,9 +10,10 @@ import { Label } from './ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Textarea } from './ui/textarea';
-import { Separator } from './ui/separator';
 
 const ApplicationForm = () => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 4;
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -33,6 +35,15 @@ const ApplicationForm = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const stepTitles = [
+    'Personal Information',
+    'Academic Details', 
+    'Technical Profile',
+    'Why CodeBusters?'
+  ];
+
+  const stepIcons = ['👤', '📚', '💻', '🚀'];
+
   const branches = [
     'Computer Science Engineering',
     'Information Technology', 
@@ -49,16 +60,45 @@ const ApplicationForm = () => {
     'Frontend Developer',
     'Backend Developer',
     'Full Stack Developer',
-    'UI/UX Designer',
     'Mobile App Developer',
     'Data Scientist',
+    'AI/ML Engineer',
     'DevOps Engineer',
-    'Content Writer',
-    'Social Media Manager',
-    'Event Manager',
-    'Marketing Lead',
+    'UI/UX Designer',
+    'Product Manager',
     'Other'
   ];
+
+  const validateStep = (step) => {
+    switch (step) {
+      case 1:
+        return formData.name && formData.email && formData.phone;
+      case 2:
+        return formData.branch && formData.year && formData.rollNumber;
+      case 3:
+        return formData.role && formData.skills;
+      case 4:
+        return formData.whyJoinClub;
+      default:
+        return true;
+    }
+  };
+
+  const nextStep = () => {
+    if (validateStep(currentStep)) {
+      if (currentStep < totalSteps) {
+        setCurrentStep(currentStep + 1);
+      }
+    } else {
+      toast.error('Please fill in all required fields');
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,12 +108,23 @@ const ApplicationForm = () => {
     }));
   };
 
+  const handleSelectChange = (name, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateStep(currentStep)) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // Convert skills string to array
       const skillsArray = formData.skills.split(',').map(skill => skill.trim()).filter(skill => skill);
       
       const submitData = {
@@ -105,308 +156,449 @@ const ApplicationForm = () => {
         whyJoinClub: '',
         expectations: ''
       });
+      setCurrentStep(1);
       
     } catch (error) {
-      const errorMessage = error.response?.data?.error || 'Failed to submit application';
-      toast.error(errorMessage);
+      console.error('Submission error:', error);
+      toast.error(error.response?.data?.message || 'Failed to submit application. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const renderStep = () => {
+    const stepVariants = {
+      hidden: { opacity: 0, x: 50 },
+      visible: { opacity: 1, x: 0 },
+      exit: { opacity: 0, x: -50 }
+    };
+
+    switch (currentStep) {
+      case 1:
+        return (
+          <motion.div
+            variants={stepVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            transition={{ duration: 0.3 }}
+            className="space-y-6"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-gray-200 font-medium">
+                Full Name *
+              </Label>
+              <Input
+                id="name"
+                name="name"
+                type="text"
+                placeholder="Enter your full name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                className="bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400/50 h-12"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-gray-200 font-medium">
+                Email Address *
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="your.email@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400/50 h-12"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="text-gray-200 font-medium">
+                Phone Number *
+              </Label>
+              <Input
+                id="phone"
+                name="phone"
+                type="tel"
+                placeholder="+91 XXXXX XXXXX"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+                className="bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400/50 h-12"
+              />
+            </div>
+          </motion.div>
+        );
+
+      case 2:
+        return (
+          <motion.div
+            variants={stepVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            transition={{ duration: 0.3 }}
+            className="space-y-6"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="branch" className="text-gray-200 font-medium">
+                Branch/Department *
+              </Label>
+              <Select value={formData.branch} onValueChange={(value) => handleSelectChange('branch', value)}>
+                <SelectTrigger className="bg-white/5 border-white/20 text-white h-12">
+                  <SelectValue placeholder="Select your branch" />
+                </SelectTrigger>
+                <SelectContent>
+                  {branches.map((branch) => (
+                    <SelectItem key={branch} value={branch}>
+                      {branch}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="year" className="text-gray-200 font-medium">
+                Current Year *
+              </Label>
+              <Select value={formData.year} onValueChange={(value) => handleSelectChange('year', value)}>
+                <SelectTrigger className="bg-white/5 border-white/20 text-white h-12">
+                  <SelectValue placeholder="Select your year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {years.map((year) => (
+                    <SelectItem key={year} value={year}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="rollNumber" className="text-gray-200 font-medium">
+                Roll Number *
+              </Label>
+              <Input
+                id="rollNumber"
+                name="rollNumber"
+                type="text"
+                placeholder="Enter your roll number"
+                value={formData.rollNumber}
+                onChange={handleChange}
+                required
+                className="bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400/50 h-12"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cgpa" className="text-gray-200 font-medium">
+                CGPA/Percentage
+              </Label>
+              <Input
+                id="cgpa"
+                name="cgpa"
+                type="number"
+                step="0.01"
+                placeholder="Enter your CGPA or percentage"
+                value={formData.cgpa}
+                onChange={handleChange}
+                className="bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400/50 h-12"
+              />
+            </div>
+          </motion.div>
+        );
+
+      case 3:
+        return (
+          <motion.div
+            variants={stepVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            transition={{ duration: 0.3 }}
+            className="space-y-6"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="role" className="text-gray-200 font-medium">
+                Preferred Role *
+              </Label>
+              <Select value={formData.role} onValueChange={(value) => handleSelectChange('role', value)}>
+                <SelectTrigger className="bg-white/5 border-white/20 text-white h-12">
+                  <SelectValue placeholder="Select your preferred role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="skills" className="text-gray-200 font-medium">
+                Technical Skills *
+              </Label>
+              <Textarea
+                id="skills"
+                name="skills"
+                placeholder="Enter your skills separated by commas (e.g., JavaScript, React, Python, etc.)"
+                value={formData.skills}
+                onChange={handleChange}
+                required
+                className="bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400/50 min-h-[100px]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="resumeLink" className="text-gray-200 font-medium">
+                Resume Link
+              </Label>
+              <Input
+                id="resumeLink"
+                name="resumeLink"
+                type="url"
+                placeholder="https://drive.google.com/..."
+                value={formData.resumeLink}
+                onChange={handleChange}
+                className="bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400/50 h-12"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="githubLink" className="text-gray-200 font-medium">
+                  GitHub Profile
+                </Label>
+                <Input
+                  id="githubLink"
+                  name="githubLink"
+                  type="url"
+                  placeholder="https://github.com/username"
+                  value={formData.githubLink}
+                  onChange={handleChange}
+                  className="bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400/50 h-12"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="linkedinLink" className="text-gray-200 font-medium">
+                  LinkedIn Profile
+                </Label>
+                <Input
+                  id="linkedinLink"
+                  name="linkedinLink"
+                  type="url"
+                  placeholder="https://linkedin.com/in/username"
+                  value={formData.linkedinLink}
+                  onChange={handleChange}
+                  className="bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400/50 h-12"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="previousExperience" className="text-gray-200 font-medium">
+                Previous Experience
+              </Label>
+              <Textarea
+                id="previousExperience"
+                name="previousExperience"
+                placeholder="Tell us about your previous projects, internships, or relevant experience..."
+                value={formData.previousExperience}
+                onChange={handleChange}
+                className="bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400/50 min-h-[100px]"
+              />
+            </div>
+          </motion.div>
+        );
+
+      case 4:
+        return (
+          <motion.div
+            variants={stepVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            transition={{ duration: 0.3 }}
+            className="space-y-6"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="whyJoinClub" className="text-gray-200 font-medium">
+                Why do you want to join CodeBusters? *
+              </Label>
+              <Textarea
+                id="whyJoinClub"
+                name="whyJoinClub"
+                placeholder="Tell us what motivates you to join our tech community..."
+                value={formData.whyJoinClub}
+                onChange={handleChange}
+                required
+                className="bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400/50 min-h-[120px]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="expectations" className="text-gray-200 font-medium">
+                What are your expectations from the club?
+              </Label>
+              <Textarea
+                id="expectations"
+                name="expectations"
+                placeholder="What do you hope to learn and achieve as a member of CodeBusters?"
+                value={formData.expectations}
+                onChange={handleChange}
+                className="bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400/50 min-h-[120px]"
+              />
+            </div>
+          </motion.div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">
-            Club Recruitment Application
-          </CardTitle>
-          <CardDescription className="text-lg">
-            Join our amazing team! Fill out the form below to apply.
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Basic Information */}
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
-                <Separator className="mb-6" />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name *</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    placeholder="Enter your full name"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    placeholder="your.email@example.com"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="+91 9876543210"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="rollNumber">Roll Number</Label>
-                  <Input
-                    id="rollNumber"
-                    name="rollNumber"
-                    value={formData.rollNumber}
-                    onChange={handleChange}
-                    placeholder="Enter your roll number"
-                  />
-                </div>
-              </div>
-            </div>
+    <div className="min-h-screen py-12 px-6 pt-24">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 bg-clip-text text-transparent mb-4">
+            Join CodeBusters
+          </h1>
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+            Apply for membership in our professional technology community and advance your career
+          </p>
+        </motion.div>
 
-            {/* Academic Information */}
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-semibold mb-4">Academic Information</h2>
-                <Separator className="mb-6" />
-              </div>
+        {/* Progress Bar */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mb-8"
+        >
+          <div className="flex items-center justify-center space-x-4 mb-6">
+            {Array.from({ length: totalSteps }, (_, index) => {
+              const stepNumber = index + 1;
+              const isActive = stepNumber === currentStep;
+              const isCompleted = stepNumber < currentStep;
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="branch">Branch *</Label>
-                  <Select 
-                    name="branch" 
-                    value={formData.branch} 
-                    onValueChange={(value) => handleChange({ target: { name: 'branch', value } })}
-                    required
+              return (
+                <div key={stepNumber} className="flex items-center">
+                  <div className={`relative w-12 h-12 rounded-xl flex items-center justify-center text-lg font-semibold transition-all duration-300 ${
+                    isActive 
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white scale-110' 
+                      : isCompleted 
+                        ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white' 
+                        : 'bg-black/40 text-gray-400 border border-blue-500/20'
+                  }`}>
+                    {isCompleted ? '✓' : stepIcons[index]}
+                  </div>
+                  {stepNumber < totalSteps && (
+                    <div className={`w-16 h-1 mx-2 rounded-full transition-all duration-300 ${
+                      stepNumber < currentStep ? 'bg-gradient-to-r from-green-500 to-blue-500' : 'bg-blue-500/20'
+                    }`} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="text-center">
+            <p className="text-gray-300 text-lg font-medium">
+              Step {currentStep} of {totalSteps}: {stepTitles[currentStep - 1]}
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Form Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          <Card className="backdrop-blur-xl bg-black/20 border-blue-500/20 shadow-2xl shadow-black/40">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl font-bold text-white mb-2">
+                {stepTitles[currentStep - 1]}
+              </CardTitle>
+              <CardDescription className="text-gray-300">
+                {currentStep === 1 && "Let's start with your basic information"}
+                {currentStep === 2 && "Tell us about your academic background"}
+                {currentStep === 3 && "Share your technical expertise and projects"}
+                {currentStep === 4 && "Finally, tell us about your motivation"}
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent>
+              <form onSubmit={handleSubmit}>
+                <AnimatePresence mode="wait">
+                  {renderStep()}
+                </AnimatePresence>
+
+                {/* Navigation Buttons */}
+                <div className="flex justify-between items-center mt-8 pt-6 border-t border-blue-500/20">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={prevStep}
+                    disabled={currentStep === 1}
+                    className="px-6 py-2 bg-black/20 border-blue-500/20 text-white hover:bg-black/40 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Branch" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {branches.map(branch => (
-                        <SelectItem key={branch} value={branch}>{branch}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="year">Year *</Label>
-                  <Select 
-                    name="year" 
-                    value={formData.year} 
-                    onValueChange={(value) => handleChange({ target: { name: 'year', value } })}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {years.map(year => (
-                        <SelectItem key={year} value={year}>{year}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="cgpa">CGPA</Label>
-                  <Input
-                    id="cgpa"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="10"
-                    name="cgpa"
-                    value={formData.cgpa}
-                    onChange={handleChange}
-                    placeholder="8.5"
-                  />
-                </div>
-              </div>
-            </div>
+                    ← Previous
+                  </Button>
 
-            {/* Application Details */}
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-semibold mb-4">Application Details</h2>
-                <Separator className="mb-6" />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role Applied For *</Label>
-                  <Select 
-                    name="role" 
-                    value={formData.role} 
-                    onValueChange={(value) => handleChange({ target: { name: 'role', value } })}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.map(role => (
-                        <SelectItem key={role} value={role}>{role}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {currentStep < totalSteps ? (
+                    <Button
+                      type="button"
+                      onClick={nextStep}
+                      disabled={!validateStep(currentStep)}
+                      className="px-8 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold rounded-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    >
+                      Next →
+                    </Button>
+                  ) : (
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting || !validateStep(currentStep)}
+                      className="px-8 py-2 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-semibold rounded-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    >
+                      {isSubmitting ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          <span>Submitting...</span>
+                        </div>
+                      ) : (
+                        'Submit Application 🚀'
+                      )}
+                    </Button>
+                  )}
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="skills">Skills (comma-separated)</Label>
-                  <Input
-                    id="skills"
-                    name="skills"
-                    value={formData.skills}
-                    onChange={handleChange}
-                    placeholder="React, Node.js, Python, UI/UX"
-                  />
-                </div>
-              </div>
-            </div>
+              </form>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-            {/* Links */}
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-semibold mb-4">Links & Portfolio</h2>
-                <Separator className="mb-6" />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="resumeLink">Resume Link</Label>
-                  <Input
-                    id="resumeLink"
-                    type="url"
-                    name="resumeLink"
-                    value={formData.resumeLink}
-                    onChange={handleChange}
-                    placeholder="https://drive.google.com/..."
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="portfolioLink">Portfolio Link (Optional)</Label>
-                  <Input
-                    id="portfolioLink"
-                    type="url"
-                    name="portfolioLink"
-                    value={formData.portfolioLink}
-                    onChange={handleChange}
-                    placeholder="https://your-portfolio.com (optional)"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="githubLink">GitHub Profile</Label>
-                  <Input
-                    id="githubLink"
-                    type="url"
-                    name="githubLink"
-                    value={formData.githubLink}
-                    onChange={handleChange}
-                    placeholder="https://github.com/yourusername"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="linkedinLink">LinkedIn Profile</Label>
-                  <Input
-                    id="linkedinLink"
-                    type="url"
-                    name="linkedinLink"
-                    value={formData.linkedinLink}
-                    onChange={handleChange}
-                    placeholder="https://linkedin.com/in/yourusername"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Additional Information */}
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-semibold mb-4">Additional Information</h2>
-                <Separator className="mb-6" />
-              </div>
-              
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="previousExperience">Previous Experience</Label>
-                  <Textarea
-                    id="previousExperience"
-                    name="previousExperience"
-                    value={formData.previousExperience}
-                    onChange={handleChange}
-                    placeholder="Tell us about your previous experience, projects, internships, etc."
-                    className="min-h-24"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="whyJoinClub">Why do you want to join our club?</Label>
-                  <Textarea
-                    id="whyJoinClub"
-                    name="whyJoinClub"
-                    value={formData.whyJoinClub}
-                    onChange={handleChange}
-                    placeholder="What motivates you to join our club?"
-                    className="min-h-24"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="expectations">What are your expectations?</Label>
-                  <Textarea
-                    id="expectations"
-                    name="expectations"
-                    value={formData.expectations}
-                    onChange={handleChange}
-                    placeholder="What do you hope to achieve by joining our club?"
-                    className="min-h-24"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <div className="flex justify-center pt-6">
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                size="lg"
-                className="px-8"
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit Application'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+        {/* Background Elements */}
+        <div className="fixed inset-0 pointer-events-none z-0">
+          <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-full filter blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full filter blur-3xl animate-pulse delay-1000"></div>
+        </div>
+      </div>
     </div>
   );
 };
