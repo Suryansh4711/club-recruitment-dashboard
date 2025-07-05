@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
@@ -16,6 +17,16 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleLogout = () => {
+    if (window.confirm('Are you sure you want to logout?')) {
+      // Clear any stored auth tokens
+      localStorage.removeItem('adminToken');
+      sessionStorage.removeItem('adminToken');
+      // Navigate to login
+      navigate('/admin/login');
+    }
+  };
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
@@ -91,38 +102,6 @@ const Navbar = () => {
                   <span className="relative z-10">Dashboard</span>
                 </Link>
                 <Link
-                  to="/admin/applications"
-                  className={`relative px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 group overflow-hidden ${
-                    location.pathname === '/admin/applications' 
-                      ? 'bg-gradient-to-r from-gray-700 to-gray-600 text-white shadow-lg shadow-gray-700/25' 
-                      : 'text-gray-300 hover:text-white'
-                  }`}
-                >
-                  {location.pathname !== '/admin/applications' && (
-                    <>
-                      <div className="absolute inset-0 bg-gradient-to-r from-gray-700/10 to-gray-600/10 backdrop-blur-sm rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <div className="absolute inset-0 bg-gradient-to-r from-gray-700/80 to-gray-600/80 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    </>
-                  )}
-                  <span className="relative z-10">Applications</span>
-                </Link>
-                <Link
-                  to="/admin/statistics"
-                  className={`relative px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 group overflow-hidden ${
-                    location.pathname === '/admin/statistics' 
-                      ? 'bg-gradient-to-r from-gray-700 to-gray-600 text-white shadow-lg shadow-gray-700/25' 
-                      : 'text-gray-300 hover:text-white'
-                  }`}
-                >
-                  {location.pathname !== '/admin/statistics' && (
-                    <>
-                      <div className="absolute inset-0 bg-gradient-to-r from-gray-700/10 to-gray-600/10 backdrop-blur-sm rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <div className="absolute inset-0 bg-gradient-to-r from-gray-700/80 to-gray-600/80 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    </>
-                  )}
-                  <span className="relative z-10">Statistics</span>
-                </Link>
-                <Link
                   to="/admin/interviews"
                   className={`relative px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 group overflow-hidden ${
                     location.pathname === '/admin/interviews' 
@@ -138,14 +117,14 @@ const Navbar = () => {
                   )}
                   <span className="relative z-10">Interviews</span>
                 </Link>
-                <Link
-                  to="/"
+                <button
+                  onClick={handleLogout}
                   className="relative text-gray-300 hover:text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 group overflow-hidden"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-slate-500/10 to-slate-600/10 backdrop-blur-sm rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-slate-500/80 to-slate-600/80 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <span className="relative z-10">← Back to Apply</span>
-                </Link>
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-red-600/10 backdrop-blur-sm rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/80 to-red-600/80 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <span className="relative z-10">Logout</span>
+                </button>
               </>
             )}
           </div>
@@ -203,28 +182,6 @@ const Navbar = () => {
                   Dashboard
                 </Link>
                 <Link
-                  to="/admin/applications"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`block px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
-                    location.pathname === '/admin/applications' 
-                      ? 'bg-gradient-to-r from-gray-700 to-gray-600 text-white shadow-lg shadow-gray-700/25' 
-                      : 'text-gray-700 dark:text-gray-300 bg-white/10 hover:bg-white/20 backdrop-blur-sm'
-                  }`}
-                >
-                  Applications
-                </Link>
-                <Link
-                  to="/admin/statistics"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`block px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
-                    location.pathname === '/admin/statistics' 
-                      ? 'bg-gradient-to-r from-gray-700 to-gray-600 text-white shadow-lg shadow-gray-700/25' 
-                      : 'text-gray-700 dark:text-gray-300 bg-white/10 hover:bg-white/20 backdrop-blur-sm'
-                  }`}
-                >
-                  Statistics
-                </Link>
-                <Link
                   to="/admin/interviews"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`block px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
@@ -235,13 +192,15 @@ const Navbar = () => {
                 >
                   Interviews
                 </Link>
-                <Link
-                  to="/"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-6 py-3 rounded-xl text-sm font-semibold text-gray-700 dark:text-gray-300 bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-300"
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="block w-full text-left px-6 py-3 rounded-xl text-sm font-semibold text-gray-700 dark:text-gray-300 bg-white/10 hover:bg-red-500/20 backdrop-blur-sm transition-all duration-300"
                 >
-                  ← Back to Apply
-                </Link>
+                  Logout
+                </button>
               </>
             )}
           </div>

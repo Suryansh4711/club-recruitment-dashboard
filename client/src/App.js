@@ -10,8 +10,6 @@ import LandingPage from './components/LandingPage.js';
 import ApplicationForm from './components/ApplicationForm.js';
 import AdminLogin from './components/admin/AdminLogin.js';
 import AdminDashboard from './components/admin/AdminDashboard.js';
-import ApplicationsList from './components/admin/ApplicationsList.js';
-import Statistics from './components/admin/Statistics.js';
 import InterviewScheduler from './components/admin/InterviewScheduler.js';
 
 function App() {
@@ -49,8 +47,6 @@ function App() {
               <Route path="/apply" element={<ApplicationForm />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/applications" element={<ApplicationsList />} />
-              <Route path="/admin/statistics" element={<Statistics />} />
               <Route path="/admin/interviews" element={<InterviewScheduler />} />
             </Routes>
           </main>

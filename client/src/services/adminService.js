@@ -4,7 +4,7 @@ const adminService = {
   // Dashboard Statistics
   async getDashboardStats() {
     try {
-      const response = await api.get('/applications/stats/overview');
+      const response = await api.get('/stats/overview');
       return response.data;
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
