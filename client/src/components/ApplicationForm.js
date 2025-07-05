@@ -19,6 +19,7 @@ const ApplicationForm = () => {
     email: '',
     phone: '',
     branch: '',
+    customBranch: '', // Add field for custom branch when "Others" is selected
     year: '',
     rollNumber: '',
     cgpa: '',
@@ -45,28 +46,21 @@ const ApplicationForm = () => {
   const stepIcons = ['👤', '📚', '💻', '🚀'];
 
   const branches = [
-    'Computer Science Engineering',
-    'Information Technology', 
-    'Electronics & Communication',
-    'Mechanical Engineering',
-    'Civil Engineering',
-    'Electrical Engineering',
-    'Other'
+    'Computer Science',
+    'Electrical',
+    'Electronics',
+    'Mechanical',
+    'Civil',
+    'BBA',
+    'BCA',
+    'Others'
   ];
 
   const years = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
 
   const roles = [
-    'Frontend Developer',
-    'Backend Developer',
-    'Full Stack Developer',
-    'Mobile App Developer',
-    'Data Scientist',
-    'AI/ML Engineer',
-    'DevOps Engineer',
-    'UI/UX Designer',
-    'Product Manager',
-    'Other'
+    '2nd Year Associate Head Member of All Team',
+    '1st Year Ambassador'
   ];
 
   const validateStep = (step) => {
@@ -74,7 +68,8 @@ const ApplicationForm = () => {
       case 1:
         return formData.name && formData.email && formData.phone;
       case 2:
-        return formData.branch && formData.year && formData.rollNumber;
+        const branchValid = formData.branch && (formData.branch !== 'Others' || formData.customBranch);
+        return branchValid && formData.year && formData.rollNumber;
       case 3:
         return formData.role && formData.skills;
       case 4:
@@ -129,9 +124,14 @@ const ApplicationForm = () => {
       
       const submitData = {
         ...formData,
+        // Use custom branch if "Others" is selected, otherwise use selected branch
+        branch: formData.branch === 'Others' ? formData.customBranch : formData.branch,
         skills: skillsArray,
         cgpa: formData.cgpa ? parseFloat(formData.cgpa) : undefined
       };
+
+      // Remove customBranch from submit data as it's not needed in backend
+      delete submitData.customBranch;
 
       const response = await axios.post('/api/apply', submitData);
       
@@ -143,6 +143,7 @@ const ApplicationForm = () => {
         email: '',
         phone: '',
         branch: '',
+        customBranch: '',
         year: '',
         rollNumber: '',
         cgpa: '',
@@ -261,6 +262,29 @@ const ApplicationForm = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Custom Branch Input - Show when "Others" is selected */}
+            {formData.branch === 'Others' && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-2"
+              >
+                <Label htmlFor="customBranch" className="text-gray-200 font-medium">
+                  Please specify your branch/department *
+                </Label>
+                <Input
+                  id="customBranch"
+                  name="customBranch"
+                  value={formData.customBranch}
+                  onChange={handleChange}
+                  placeholder="Enter your branch/department"
+                  className="bg-white/5 border-white/20 text-white placeholder-gray-400 h-12"
+                  required={formData.branch === 'Others'}
+                />
+              </motion.div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="year" className="text-gray-200 font-medium">

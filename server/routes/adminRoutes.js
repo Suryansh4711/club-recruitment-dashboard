@@ -15,11 +15,14 @@ router.post('/login', async (req, res) => {
   try {
     const { clubId, password } = req.body;
 
-    // For demo purposes, we'll use hardcoded credentials
+    // Production admin credentials from environment variables
     const validCredentials = [
-      { clubId: 'CB2024ADMIN', password: 'CodeBusters@2024', role: 'super_admin', name: 'Super Admin' },
-      { clubId: 'CB2024LEAD', password: 'TeamLead@2024', role: 'team_lead', name: 'Team Lead' },
-      { clubId: 'CB2024TECH', password: 'TechHead@2024', role: 'tech_head', name: 'Tech Head' }
+      { 
+        clubId: process.env.ADMIN_CLUB_ID || 'CODEBUSTERS2025', 
+        password: process.env.ADMIN_PASSWORD || 'CodeBusters@2025', 
+        role: 'super_admin', 
+        name: 'CodeBusters Admin' 
+      }
     ];
 
     const validCredential = validCredentials.find(

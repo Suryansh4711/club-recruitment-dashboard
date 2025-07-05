@@ -18,39 +18,25 @@ const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Predefined club credentials (in production, this would be in a secure backend)
-  const validCredentials = [
-    { clubId: 'CB2024ADMIN', password: 'CodeBusters@2024', role: 'super_admin' },
-    { clubId: 'CB2024LEAD', password: 'TeamLead@2024', role: 'team_lead' },
-    { clubId: 'CB2024TECH', password: 'TechHead@2024', role: 'tech_head' }
-  ];
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      const validCredential = validCredentials.find(
-        cred => cred.clubId === credentials.clubId && cred.password === credentials.password
-      );
-
-      if (validCredential) {
+      // Use the actual backend API for authentication
+      const response = await adminService.login(credentials);
+      
+      if (response.token) {
         // Store admin auth in localStorage
         localStorage.setItem('adminAuth', JSON.stringify({
           clubId: credentials.clubId,
-          role: validCredential.role,
+          role: response.admin.role,
           loginTime: new Date().toISOString()
         }));
         
-        // Also store token for API requests
-        localStorage.setItem('token', 'demo-admin-token');
-        localStorage.setItem('adminUser', JSON.stringify({
-          clubId: credentials.clubId,
-          role: validCredential.role
-        }));
+        // Store token for API requests
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('adminUser', JSON.stringify(response.admin));
         
         toast.success('Login successful! Welcome to CodeBusters Admin Panel');
         navigate('/admin');
@@ -59,7 +45,7 @@ const AdminLogin = () => {
       }
     } catch (error) {
       console.error('Login error:', error);
-      toast.error('Login failed. Please try again.');
+      toast.error('Invalid club ID or password. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -167,7 +153,7 @@ const AdminLogin = () => {
                       id="clubId"
                       name="clubId"
                       type="text"
-                      placeholder="Enter your club ID (e.g., CB2024ADMIN)"
+                      placeholder="Enter your club ID"
                       value={credentials.clubId}
                       onChange={handleInputChange}
                       required
@@ -245,33 +231,6 @@ const AdminLogin = () => {
                   </Button>
                 </motion.div>
               </form>
-
-              {/* Enhanced Demo Credentials Section */}
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.9 }}
-                className="mt-8 p-4 bg-black/20 rounded-xl border border-gray-500/20 backdrop-blur-sm"
-              >
-                <h4 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
-                  <span className="text-yellow-400">💡</span>
-                  Demo Credentials:
-                </h4>
-                <div className="space-y-2 text-xs text-gray-400">
-                  <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-800/20 hover:bg-gray-800/30 transition-colors">
-                    <span className="text-purple-400">👑</span>
-                    <span>Super Admin: CB2024ADMIN / CodeBusters@2024</span>
-                  </div>
-                  <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-800/20 hover:bg-gray-800/30 transition-colors">
-                    <span className="text-green-400">🎯</span>
-                    <span>Team Lead: CB2024LEAD / TeamLead@2024</span>
-                  </div>
-                  <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-800/20 hover:bg-gray-800/30 transition-colors">
-                    <span className="text-blue-400">⚡</span>
-                    <span>Tech Head: CB2024TECH / TechHead@2024</span>
-                  </div>
-                </div>
-              </motion.div>
             </CardContent>
           </Card>
         </motion.div>

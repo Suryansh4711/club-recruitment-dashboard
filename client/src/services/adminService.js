@@ -270,7 +270,12 @@ const adminService = {
   getAdminUser() {
     const adminUser = localStorage.getItem('adminUser');
     return adminUser ? JSON.parse(adminUser) : null;
-  }
+  },
+
+  // Authentication
+  async login(credentials) {
+    return this.adminLogin(credentials);
+  },
 };
 
 export default adminService;

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import adminService from '../../services/adminService';
 import InterviewScheduler from './InterviewScheduler';
+import TaskManager from './TaskManager';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -20,6 +21,23 @@ const AdminDashboard = () => {
   });
   const [totalPages, setTotalPages] = useState(1);
   const [showDetails, setShowDetails] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingApplication, setEditingApplication] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    branch: '',
+    year: '',
+    role: '',
+    skills: '',
+    experience: '',
+    github: '',
+    linkedin: '',
+    portfolio: '',
+    whyJoin: '',
+    projects: ''
+  });
   const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'applications', 'statistics'
   const navigate = useNavigate();
 
@@ -141,8 +159,61 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleEditApplication = (application) => {
+    setEditingApplication(application);
+    setEditForm({
+      name: application.name || '',
+      email: application.email || '',
+      phone: application.phone || '',
+      branch: application.branch || '',
+      year: application.year || '',
+      role: application.role || '',
+      skills: Array.isArray(application.skills) ? application.skills.join(', ') : (application.skills || ''),
+      experience: application.experience || '',
+      github: application.github || '',
+      linkedin: application.linkedin || '',
+      portfolio: application.portfolio || '',
+      whyJoin: application.whyJoin || '',
+      projects: application.projects || ''
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateApplication = async (e) => {
+    e.preventDefault();
+    try {
+      const updatedData = {
+        ...editForm,
+        skills: editForm.skills.split(',').map(skill => skill.trim()).filter(skill => skill)
+      };
+      
+      await adminService.updateApplication(editingApplication._id, updatedData);
+      await fetchApplications();
+      setShowEditModal(false);
+      setEditingApplication(null);
+      setEditForm({
+        name: '',
+        email: '',
+        phone: '',
+        branch: '',
+        year: '',
+        role: '',
+        skills: '',
+        experience: '',
+        github: '',
+        linkedin: '',
+        portfolio: '',
+        whyJoin: '',
+        projects: ''
+      });
+    } catch (err) {
+      console.error('Error updating application:', err);
+      alert('Failed to update application');
+    }
+  };
+
   const handleScheduleInterviews = () => {
-    navigate('/admin/interviews');
+    setActiveTab('interviews');
   };
 
   const handleLogout = () => {
@@ -260,7 +331,8 @@ const AdminDashboard = () => {
               { id: 'overview', label: 'Overview', icon: '📊' },
               { id: 'applications', label: 'Applications', icon: '📋' },
               { id: 'statistics', label: 'Statistics', icon: '📈' },
-              { id: 'interviews', label: 'Interviews', icon: '📅' }
+              { id: 'interviews', label: 'Interviews', icon: '📅' },
+              { id: 'tasks', label: 'Tasks', icon: '📝' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -394,6 +466,7 @@ const AdminDashboard = () => {
             onSelectApplication={handleSelectApplication}
             onSelectAll={handleSelectAll}
             onDeleteApplication={handleDeleteApplication}
+            onEditApplication={handleEditApplication}
             onShowDetails={setShowDetails}
             onExportCSV={handleExportCSV}
           />
@@ -406,7 +479,207 @@ const AdminDashboard = () => {
         {activeTab === 'interviews' && (
           <InterviewScheduler />
         )}
+
+        {activeTab === 'tasks' && (
+          <TaskManager />
+        )}
       </div>
+
+      {/* Edit Application Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900/95 backdrop-blur-sm border border-white/10 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-white">Edit Application</h2>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-400 hover:text-white transition-colors text-xl"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleUpdateApplication} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2">Name *</label>
+                  <input
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-3 py-2 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2">Email *</label>
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-3 py-2 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2">Phone</label>
+                  <input
+                    type="tel"
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full px-3 py-2 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2">Branch *</label>
+                  <select
+                    value={editForm.branch}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, branch: e.target.value }))}
+                    className="w-full px-3 py-2 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="">Select Branch</option>
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="Electrical">Electrical</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Mechanical">Mechanical</option>
+                    <option value="Civil">Civil</option>
+                    <option value="BBA">BBA</option>
+                    <option value="BCA">BCA</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2">Year *</label>
+                  <select
+                    value={editForm.year}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, year: e.target.value }))}
+                    className="w-full px-3 py-2 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="">Select Year</option>
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2">Role *</label>
+                  <select
+                    value={editForm.role}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, role: e.target.value }))}
+                    className="w-full px-3 py-2 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="">Select Role</option>
+                    <option value="2nd Year Associate Head Member of All Team">2nd Year Associate Head Member of All Team</option>
+                    <option value="1st Year Ambassador">1st Year Ambassador</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Skills (comma-separated)</label>
+                <input
+                  type="text"
+                  value={editForm.skills}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, skills: e.target.value }))}
+                  placeholder="JavaScript, Python, React, etc."
+                  className="w-full px-3 py-2 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Experience</label>
+                <textarea
+                  value={editForm.experience}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, experience: e.target.value }))}
+                  className="w-full px-3 py-2 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows="3"
+                  placeholder="Previous experience in coding, projects, etc."
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2">GitHub Profile</label>
+                  <input
+                    type="url"
+                    value={editForm.github}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, github: e.target.value }))}
+                    placeholder="https://github.com/username"
+                    className="w-full px-3 py-2 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2">LinkedIn Profile</label>
+                  <input
+                    type="url"
+                    value={editForm.linkedin}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, linkedin: e.target.value }))}
+                    placeholder="https://linkedin.com/in/username"
+                    className="w-full px-3 py-2 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2">Portfolio</label>
+                  <input
+                    type="url"
+                    value={editForm.portfolio}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, portfolio: e.target.value }))}
+                    placeholder="https://yourportfolio.com"
+                    className="w-full px-3 py-2 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Why do you want to join?</label>
+                <textarea
+                  value={editForm.whyJoin}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, whyJoin: e.target.value }))}
+                  className="w-full px-3 py-2 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows="3"
+                  placeholder="Explain your motivation to join the club..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Projects</label>
+                <textarea
+                  value={editForm.projects}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, projects: e.target.value }))}
+                  className="w-full px-3 py-2 bg-black/50 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows="3"
+                  placeholder="Describe your projects..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-6 py-2 text-gray-400 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  Update Application
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -427,6 +700,7 @@ const ApplicationsManagement = ({
   onSelectApplication,
   onSelectAll,
   onDeleteApplication,
+  onEditApplication,
   onShowDetails,
   onExportCSV
 }) => {
@@ -461,10 +735,13 @@ const ApplicationsManagement = ({
             className="px-3 sm:px-4 py-2 bg-gray-800/50 border border-gray-600/50 rounded-lg sm:rounded-xl text-white focus:outline-none focus:border-gray-500 text-sm sm:text-base"
           >
             <option value="">All Branches</option>
-            <option value="CSE">CSE</option>
-            <option value="ECE">ECE</option>
-            <option value="IT">IT</option>
-            <option value="ME">ME</option>
+            <option value="Computer Science">Computer Science</option>
+            <option value="Electrical">Electrical</option>
+            <option value="Electronics">Electronics</option>
+            <option value="Mechanical">Mechanical</option>
+            <option value="Civil">Civil</option>
+            <option value="BBA">BBA</option>
+            <option value="BCA">BCA</option>
           </select>
           <select
             value={filters.role}
@@ -472,9 +749,8 @@ const ApplicationsManagement = ({
             className="px-3 sm:px-4 py-2 bg-gray-800/50 border border-gray-600/50 rounded-lg sm:rounded-xl text-white focus:outline-none focus:border-gray-500 text-sm sm:text-base"
           >
             <option value="">All Roles</option>
-            <option value="Core Team">Core Team</option>
-            <option value="Executive">Executive</option>
-            <option value="Member">Member</option>
+            <option value="2nd Year Associate Head Member of All Team">2nd Year Associate Head Member</option>
+            <option value="1st Year Ambassador">1st Year Ambassador</option>
           </select>
           <select
             value={filters.year}
@@ -612,6 +888,12 @@ const ApplicationsManagement = ({
                             <option value="Selected">Selected</option>
                             <option value="Rejected">Rejected</option>
                           </select>
+                          <button
+                            onClick={() => onEditApplication(app)}
+                            className="px-2 sm:px-3 py-1 bg-green-600/50 hover:bg-green-500/50 rounded-lg text-xs text-white transition-all duration-300"
+                          >
+                            Edit
+                          </button>
                           <button
                             onClick={() => onDeleteApplication(app._id)}
                             className="px-2 sm:px-3 py-1 bg-red-600/50 hover:bg-red-500/50 rounded-lg text-xs text-white transition-all duration-300"

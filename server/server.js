@@ -21,10 +21,12 @@ app.use((req, res, next) => {
 const applicationRoutes = require('./routes/applicationRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const interviewRoutes = require('./routes/interviewRoutes');
+const taskRoutes = require('./routes/taskRoutes');
 
 app.use('/api', applicationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/interview', interviewRoutes);
+app.use('/api/tasks', taskRoutes);
 
 
 // MongoDB Connection (optional for testing)
