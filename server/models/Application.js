@@ -38,6 +38,7 @@ const applicationSchema = new mongoose.Schema({
   interviewTime: { type: String },
   interviewLink: { type: String },
   interviewer: { type: String },
+  interviewSlot: { type: mongoose.Schema.Types.ObjectId, ref: 'InterviewSlot' },
   
   // Task Assignment
   assignedTask: {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import adminService from '../../services/adminService';
+import InterviewScheduler from './InterviewScheduler';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -129,6 +130,17 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleExportCSV = async () => {
+    try {
+      const csvContent = await adminService.exportApplicationsCSV();
+      const filename = `applications_${new Date().toISOString().split('T')[0]}.csv`;
+      adminService.downloadCSV(csvContent, filename);
+    } catch (err) {
+      console.error('Error exporting CSV:', err);
+      alert('Failed to export CSV');
+    }
+  };
+
   const handleScheduleInterviews = () => {
     navigate('/admin/interviews');
   };
@@ -247,7 +259,8 @@ const AdminDashboard = () => {
             {[
               { id: 'overview', label: 'Overview', icon: '📊' },
               { id: 'applications', label: 'Applications', icon: '📋' },
-              { id: 'statistics', label: 'Statistics', icon: '📈' }
+              { id: 'statistics', label: 'Statistics', icon: '📈' },
+              { id: 'interviews', label: 'Interviews', icon: '📅' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -382,11 +395,16 @@ const AdminDashboard = () => {
             onSelectAll={handleSelectAll}
             onDeleteApplication={handleDeleteApplication}
             onShowDetails={setShowDetails}
+            onExportCSV={handleExportCSV}
           />
         )}
 
         {activeTab === 'statistics' && (
           <StatisticsView stats={stats} />
+        )}
+
+        {activeTab === 'interviews' && (
+          <InterviewScheduler />
         )}
       </div>
     </div>
@@ -409,7 +427,8 @@ const ApplicationsManagement = ({
   onSelectApplication,
   onSelectAll,
   onDeleteApplication,
-  onShowDetails
+  onShowDetails,
+  onExportCSV
 }) => {
   return (
     <motion.div 
@@ -501,6 +520,12 @@ const ApplicationsManagement = ({
             className="px-3 sm:px-4 py-2 bg-red-600/50 hover:bg-red-500/50 border border-red-500/50 rounded-lg sm:rounded-xl text-white transition-all duration-300 text-sm sm:text-base"
           >
             Reject Selected
+          </button>
+          <button
+            onClick={onExportCSV}
+            className="px-3 sm:px-4 py-2 bg-blue-600/50 hover:bg-blue-500/50 border border-blue-500/50 rounded-lg sm:rounded-xl text-white transition-all duration-300 text-sm sm:text-base"
+          >
+            📥 Export CSV
           </button>
         </div>
       </div>

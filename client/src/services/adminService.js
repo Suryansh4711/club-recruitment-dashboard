@@ -80,6 +80,16 @@ const adminService = {
         this.updateApplicationStatus(id, status)
       );
       await Promise.all(promises);
+      
+      // If status is 'Shortlisted', auto-create interview slots
+      if (status === 'Shortlisted') {
+        try {
+          await this.autoCreateSlots({ daysAhead: 7, slotsPerDay: 6 });
+        } catch (error) {
+          console.log('Note: Auto-create slots failed, but status update succeeded');
+        }
+      }
+      
       return { success: true };
     } catch (error) {
       console.error('Error bulk updating status:', error);
@@ -98,6 +108,132 @@ const adminService = {
       console.error('Error exporting applications:', error);
       throw error;
     }
+  },
+
+  // Interview Scheduling
+  async getInterviewSlots(filters = {}) {
+    try {
+      const params = new URLSearchParams();
+      if (filters.date) params.append('date', filters.date);
+      if (filters.available) params.append('available', filters.available);
+
+      const response = await api.get(`/interview/slots?${params}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching interview slots:', error);
+      throw error;
+    }
+  },
+
+  async createInterviewSlots(data) {
+    try {
+      const response = await api.post('/interview/slots', data);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating interview slots:', error);
+      throw error;
+    }
+  },
+
+  async autoCreateSlots(options = {}) {
+    try {
+      const response = await api.post('/interview/auto-create-slots', options);
+      return response.data;
+    } catch (error) {
+      console.error('Error auto-creating slots:', error);
+      throw error;
+    }
+  },
+
+  async autoAssignInterviews() {
+    try {
+      const response = await api.post('/interview/assign');
+      return response.data;
+    } catch (error) {
+      console.error('Error auto-assigning interviews:', error);
+      throw error;
+    }
+  },
+
+  async rescheduleInterview(applicationId, newSlotId) {
+    try {
+      const response = await api.post(`/interview/reschedule/${applicationId}`, {
+        newSlotId
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error rescheduling interview:', error);
+      throw error;
+    }
+  },
+
+  async exportInterviewData() {
+    try {
+      const response = await api.get('/interview/export', {
+        responseType: 'blob'
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error exporting interview data:', error);
+      throw error;
+    }
+  },
+
+  // CSV Export for applications
+  async exportApplicationsCSV() {
+    try {
+      const applications = await this.getApplications({ limit: 1000 });
+      const csv = this.convertToCSV(applications.applications);
+      return csv;
+    } catch (error) {
+      console.error('Error exporting applications:', error);
+      throw error;
+    }
+  },
+
+  convertToCSV(applications) {
+    if (!applications || applications.length === 0) {
+      return '';
+    }
+
+    const headers = [
+      'Name', 'Email', 'Phone', 'Branch', 'Year', 'Role', 'Status',
+      'Skills', 'Experience', 'GitHub', 'LinkedIn', 'Portfolio', 'Created Date'
+    ];
+
+    const rows = applications.map(app => [
+      app.name || '',
+      app.email || '',
+      app.phone || '',
+      app.branch || '',
+      app.year || '',
+      app.role || '',
+      app.status || '',
+      (app.skills || []).join('; '),
+      app.experience || '',
+      app.github || '',
+      app.linkedin || '',
+      app.portfolio || '',
+      new Date(app.createdAt).toLocaleDateString()
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(field => `"${field.toString().replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+
+    return csvContent;
+  },
+
+  downloadCSV(csvContent, filename) {
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   },
 
   // Authentication
