@@ -101,6 +101,22 @@ const Navbar = () => {
                   )}
                   <span className="relative z-10">Dashboard</span>
                 </Link>
+                <Link
+                  to="/admin/interviews"
+                  className={`relative px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 group overflow-hidden ${
+                    location.pathname === '/admin/interviews' 
+                      ? 'bg-gradient-to-r from-gray-700 to-gray-600 text-white shadow-lg shadow-gray-700/25' 
+                      : 'text-gray-300 hover:text-white'
+                  }`}
+                >
+                  {location.pathname !== '/admin/interviews' && (
+                    <>
+                      <div className="absolute inset-0 bg-gradient-to-r from-gray-700/10 to-gray-600/10 backdrop-blur-sm rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-gray-700/80 to-gray-600/80 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    </>
+                  )}
+                  <span className="relative z-10">Interviews</span>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="relative text-gray-300 hover:text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 group overflow-hidden"
@@ -164,6 +180,17 @@ const Navbar = () => {
                   }`}
                 >
                   Dashboard
+                </Link>
+                <Link
+                  to="/admin/interviews"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`block px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                    location.pathname === '/admin/interviews' 
+                      ? 'bg-gradient-to-r from-gray-700 to-gray-600 text-white shadow-lg shadow-gray-700/25' 
+                      : 'text-gray-700 dark:text-gray-300 bg-white/10 hover:bg-white/20 backdrop-blur-sm'
+                  }`}
+                >
+                  Interviews
                 </Link>
                 <button
                   onClick={() => {

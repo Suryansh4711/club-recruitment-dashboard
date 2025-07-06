@@ -289,7 +289,7 @@ const LandingPage = () => {
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold text-white">Email</h3>
-                    <p className="text-gray-400">code_busters@gla.ac.in</p>
+                    <p className="text-gray-400">codebusters@gla.ac.in</p>
                   </div>
                 </div>
 

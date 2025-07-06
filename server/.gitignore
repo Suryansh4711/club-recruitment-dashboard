@@ -95,7 +95,6 @@ tmp/
 *.db
 *.sqlite
 *.sqlite3
-*.md
 
 # OS generated files
 .DS_Store
